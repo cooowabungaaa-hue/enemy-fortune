@@ -630,6 +630,27 @@
 
             } catch (error) {
                 console.error("API Error:", error);
+                
+                // --- DEBUG ADDITION: IF IT FAILS, TRY FETCHING AVAILABLE MODELS ---
+                try {
+                    const modelRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+                    if (modelRes.ok) {
+                        const modelData = await modelRes.json();
+                        if (modelData.models) {
+                            const genModels = modelData.models
+                                .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"))
+                                .map(m => m.name.replace('models/', ''))
+                                .join(', ');
+                            console.log("AVAILABLE MODELS: ", genModels);
+                            
+                            if (error.message.includes('not found') || error.message.includes('supported')) {
+                                alert(`モデル指定エラーが発生しました。\n\n現在ご利用のAPIキーで利用可能な生成モデルは以下の通りです:\n${genModels}\n\nこの画面のスクリーンショットを私（AI）に送ってください！`);
+                            }
+                        }
+                    }
+                } catch(e) { /* ignore secondary error */ }
+                // -------------------------------------------------------------------
+
                 const msg = error.message.toLowerCase();
                 let errMsg = 'APIリクエストに失敗しました。\n\n詳細: ' + error.message;
                 
@@ -638,7 +659,10 @@
                 }
                 
                 errMsg += '\n\n右上の⚙️設定ボタンから、APIキーをセットし直してください。';
-                alert(errMsg);
+                
+                if (!error.message.includes('not found') && !error.message.includes('supported')) {
+                    alert(errMsg);
+                }
                 
                 resetApp();
             }

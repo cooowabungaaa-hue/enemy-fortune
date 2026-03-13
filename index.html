@@ -102,26 +102,7 @@
 
         <main class="flex-1 p-5 overflow-y-auto pb-10 space-y-6" id="main-content">
             
-            <!-- HP Section -->
-            <section class="glass-panel rounded-2xl p-5">
-                <div class="flex justify-between items-center mb-3">
-                    <h2 class="text-xs font-bold text-zinc-400 tracking-wider uppercase flex items-center">
-                        <span class="w-2 h-2 rounded-full bg-green-400 mr-2 shadow-[0_0_8px_rgba(74,222,128,0.8)]"></span> Mental HP
-                    </h2>
-                    <span id="hp-text" class="text-xs font-bold font-mono text-zinc-300">100 / 100</span>
-                </div>
-                <!-- HP Bar -->
-                <div class="w-full bg-black/40 rounded-full h-3 mb-5 border border-white/5 overflow-hidden relative">
-                    <div id="hp-bar" class="bg-gradient-to-r from-green-400 to-emerald-400 h-full rounded-full w-full hp-segment"></div>
-                </div>
-                <!-- Healing action output display -->
-                <div id="healing-suggestion" class="hidden mb-4 p-3 bg-purple-900/40 border border-purple-500/30 rounded-xl text-xs text-purple-200 leading-relaxed font-bold animate-pulse-slow">
-                </div>
-                <button onclick="takeDamage()" class="w-full hover:bg-white/10 border border-white/10 text-zinc-300 text-sm font-medium py-3 px-4 rounded-xl transition duration-300 active:scale-[0.98] flex items-center justify-center group relative overflow-hidden bg-zinc-800">
-                    <div class="absolute inset-0 bg-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <span class="group-hover:text-red-400 transition-colors duration-300 relative z-10">⚡ ダメージを報告 (-10)</span>
-                </button>
-            </section>
+
 
             <!-- Profiling (Registration) Section -->
             <section id="profiling-section" class="glass-panel rounded-3xl p-6 relative mt-2 animate-slide-up overflow-hidden">
@@ -289,115 +270,8 @@
             document.getElementById('date-display').innerText = dateStr;
         });
 
-        // Current saved astrology context (for self-care regeneration)
+        // Current saved astrology context
         let currentAstrologyContext = null;
-
-        // HP Management
-        let currentHp = 100;
-        const maxHp = 100;
-
-        function updateHpDisplay() {
-            const hpBar = document.getElementById('hp-bar');
-            const hpText = document.getElementById('hp-text');
-            
-            hpText.innerText = currentHp + ' / ' + maxHp;
-            hpBar.style.width = ((currentHp / maxHp) * 100) + '%';
-
-            // Reset gradient classes
-            hpBar.className = "h-full rounded-full w-full hp-segment";
-
-            if (currentHp > 50) {
-                hpBar.classList.add("bg-gradient-to-r", "from-green-400", "to-emerald-400");
-                hpBar.style.boxShadow = "0 0 10px rgba(52, 211, 153, 0.4)";
-            } else if (currentHp > 20) {
-                hpBar.classList.add("bg-gradient-to-r", "from-amber-400", "to-orange-400");
-                hpBar.style.boxShadow = "0 0 10px rgba(251, 191, 36, 0.4)";
-            } else {
-                hpBar.classList.add("bg-gradient-to-r", "from-red-500", "to-rose-500", "animate-pulse");
-                hpBar.style.boxShadow = "0 0 15px rgba(239, 68, 68, 0.6)";
-            }
-        }
-
-        async function takeDamage() {
-            if (currentHp <= 0) return;
-            
-            currentHp -= 10;
-            if (currentHp < 0) currentHp = 0;
-            
-            updateHpDisplay();
-            
-            // Shake effect
-            const container = document.body;
-            container.classList.remove('animate-shake');
-            void container.offsetWidth; // trigger reflow
-            container.classList.add('animate-shake');
-
-            // Overlay flash effect
-            const flash = document.createElement('div');
-            flash.className = 'fixed inset-0 bg-red-500/20 z-40 pointer-events-none transition-opacity duration-300';
-            document.body.appendChild(flash);
-            setTimeout(() => {
-                flash.style.opacity = '0';
-                setTimeout(() => flash.remove(), 300);
-            }, 50);
-
-            // Hide previous suggestion if any
-            const suggestionEl = document.getElementById('healing-suggestion');
-            suggestionEl.classList.add('hidden');
-
-            const apiKey = localStorage.getItem('tenteki_api_key');
-            if (!apiKey || !currentAstrologyContext) {
-                 if (currentHp <= 20) {
-                     alert("限界です！今日は美味しいものを食べて直帰してください。");
-                 }
-                 return;
-            }
-
-            // Optional: Request a customized self-care suggestion from AI based on current HP
-            if (currentHp <= 60 && currentHp % 20 === 0 || currentHp === 0) {
-                suggestionEl.innerText = "✨ バイオリズムに合わせたご褒美を計算中...";
-                suggestionEl.classList.remove('hidden');
-
-                const systemPrompt = "あなたは占星術に基づいた心理カウンセラーです。\\n" +
-"ユーザーから「職場の天敵にダメージを受けた」という報告を受けました。現在のユーザーのメンタルHPは" + currentHp + "/100です。\\n" +
-"本日のユーザーと天敵の誕生日データ（" + JSON.stringify(currentAstrologyContext) + "）を踏まえ、\\n" +
-"クスッと笑える、または癒やされる「最適な自分へのご褒美（セルフケア案）」を1〜2文で提案してください。\\n" +
-"出力はJSON形式にしてください。\\n" +
-"【JSON形式】 { \"careSuggestion\": \"限界近いです。星回り的にラッキーアイテムの『高級アイス』を買って直帰してください\" }";
-
-                 try {
-                    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + apiKey
-                        },
-                        body: JSON.stringify({
-                            model: "gpt-4o-mini",
-                            messages: [
-                                { role: "system", content: systemPrompt },
-                                { role: "user", content: "ダメージを受けました。最適なご褒美を提案して。" }
-                            ],
-                            response_format: { type: "json_object" },
-                            temperature: 0.8,
-                            max_tokens: 200
-                        })
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        const result = JSON.parse(data.choices[0].message.content);
-                        suggestionEl.innerHTML = '✦ <b>AIセルフケア提案:</b><br>' + result.careSuggestion;
-                        
-                        if(currentHp === 0) {
-                             setTimeout(()=>alert("💥 HPがゼロになりました。" + result.careSuggestion), 500);
-                        }
-                    }
-                } catch(e) {
-                    suggestionEl.classList.add('hidden');
-                }
-            }
-        }
 
         // Settings Modal
         window.toggleSettings = function() {
@@ -465,7 +339,6 @@
 
         // Initialize App
         window.onload = function() {
-            updateHpDisplay();
             const savedKey = localStorage.getItem('tenteki_api_key');
             if (!savedKey) {
                 document.getElementById('api-warning').classList.remove('hidden');
@@ -501,7 +374,6 @@
 
             document.getElementById('main-content').scrollTo({ top: 0, behavior: 'smooth' });
             currentAstrologyContext = null;
-            document.getElementById('healing-suggestion').classList.add('hidden');
         }
 
         // --- Enemy Cards Logic ---
@@ -639,7 +511,6 @@
             localStorage.setItem('tenteki_enemy_name', document.getElementById('enemy-name').value.trim());
             localStorage.setItem('tenteki_enemy_birthday', enemyBday);
             
-            // Save state for healing suggestions
             currentAstrologyContext = {
                 user: { name: userName, birthday: userBday },
                 enemy: { name: enemyName, birthday: enemyBday }

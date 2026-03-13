@@ -607,12 +607,17 @@
             } catch (error) {
                 console.error("API Error:", error);
                 const msg = error.message.toLowerCase();
+                let errMsg = 'APIリクエストに失敗しました。\n\n詳細: ' + error.message;
+                
                 if (msg.includes('api key') || msg.includes('unauthorized') || msg.includes('401')) {
-                    showToast('Invalid API Key provided.', true);
-                    toggleSettings();
-                } else {
-                    alert('APIエラー発生:\n詳細: ' + error.message);
+                    errMsg += '\n\n【原因】\n入力されたAPIキーが間違っているか、失効している可能性があります。';
+                } else if (msg.includes('quota') || msg.includes('429')) {
+                    errMsg += '\n\n【原因】\nOpenAIの利用枠（クレジット）が不足しているか、支払い設定が完了していない可能性があります。';
                 }
+                
+                errMsg += '\n\n右上の⚙️設定ボタンから、有効なAPIキーをセットし直してください。';
+                alert(errMsg);
+                
                 resetApp();
             }
         }

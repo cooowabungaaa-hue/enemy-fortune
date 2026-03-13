@@ -451,6 +451,17 @@
             if (!savedKey) {
                 document.getElementById('api-warning').classList.remove('hidden');
             }
+
+            // Load saved profile data
+            const savedUserName = localStorage.getItem('tenteki_user_name');
+            const savedUserBday = localStorage.getItem('tenteki_user_birthday');
+            const savedEnemyName = localStorage.getItem('tenteki_enemy_name');
+            const savedEnemyBday = localStorage.getItem('tenteki_enemy_birthday');
+
+            if (savedUserName) document.getElementById('user-name').value = savedUserName;
+            if (savedUserBday) document.getElementById('user-birthday').value = savedUserBday;
+            if (savedEnemyName) document.getElementById('enemy-name').value = savedEnemyName;
+            if (savedEnemyBday) document.getElementById('enemy-birthday').value = savedEnemyBday;
         };
 
         window.resetApp = function() {
@@ -486,6 +497,12 @@
                 showToast('生年月日の入力は必須です。', true);
                 return;
             }
+
+            // Save profile data to localStorage
+            localStorage.setItem('tenteki_user_name', document.getElementById('user-name').value.trim());
+            localStorage.setItem('tenteki_user_birthday', userBday);
+            localStorage.setItem('tenteki_enemy_name', document.getElementById('enemy-name').value.trim());
+            localStorage.setItem('tenteki_enemy_birthday', enemyBday);
             
             // Save state for healing suggestions
             currentAstrologyContext = {

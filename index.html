@@ -149,11 +149,30 @@
                         </div>
                     </div>
 
+                    <!-- Saved Enemies Section -->
+                    <div id="saved-enemies-container" class="hidden space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xs font-bold text-amber-500 uppercase tracking-widest flex items-center">
+                                <span class="mr-2">🔖</span> 天敵カード
+                            </h3>
+                            <span id="saved-count" class="text-[10px] text-zinc-500 font-mono">0/5</span>
+                        </div>
+                        <!-- Cards wrapper -->
+                        <div id="cards-wrapper" class="flex gap-3 overflow-x-auto pb-2 snap-x">
+                            <!-- JS injects cards here -->
+                        </div>
+                    </div>
+
                     <!-- Enemy Info Section -->
                     <div class="bg-red-900/10 p-4 rounded-2xl border border-red-500/20 space-y-4">
-                        <h3 class="text-xs font-bold text-red-400 uppercase tracking-widest flex items-center">
-                            <span class="mr-2">👺</span> 天敵の情報
-                        </h3>
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xs font-bold text-red-400 uppercase tracking-widest flex items-center">
+                                <span class="mr-2">👺</span> 天敵の情報
+                            </h3>
+                            <button onclick="saveCurrentEnemy()" id="save-enemy-btn" class="text-[10px] bg-red-500/20 hover:bg-red-500/40 text-red-300 px-3 py-1.5 rounded-lg border border-red-500/30 transition-colors hidden font-semibold">
+                                カードに登録
+                            </button>
+                        </div>
                         <div>
                             <label class="block text-[10px] font-semibold text-zinc-500 mb-1 uppercase tracking-widest">Name</label>
                             <input type="text" id="enemy-name" placeholder="マウンティング・ゴリラ先輩" class="sleek-input w-full text-zinc-100 rounded-lg p-2.5 text-sm outline-none">
@@ -452,6 +471,12 @@
                 document.getElementById('api-warning').classList.remove('hidden');
             }
 
+            // Add input listeners to show save button
+            document.getElementById('enemy-name').addEventListener('input', toggleSaveBtn);
+            document.getElementById('enemy-birthday').addEventListener('input', toggleSaveBtn);
+
+            loadEnemyCards();
+
             // Load saved profile data
             const savedUserName = localStorage.getItem('tenteki_user_name');
             const savedUserBday = localStorage.getItem('tenteki_user_birthday');
@@ -477,6 +502,116 @@
             document.getElementById('main-content').scrollTo({ top: 0, behavior: 'smooth' });
             currentAstrologyContext = null;
             document.getElementById('healing-suggestion').classList.add('hidden');
+        }
+
+        // --- Enemy Cards Logic ---
+        let savedEnemyCards = [];
+
+        function toggleSaveBtn() {
+            const name = document.getElementById('enemy-name').value.trim();
+            const bday = document.getElementById('enemy-birthday').value;
+            const btn = document.getElementById('save-enemy-btn');
+            
+            if (name && bday) {
+                btn.classList.remove('hidden');
+            } else {
+                btn.classList.add('hidden');
+            }
+        }
+
+        function loadEnemyCards() {
+            const saved = localStorage.getItem('tenteki_saved_enemiesList');
+            if (saved) {
+                try {
+                    savedEnemyCards = JSON.parse(saved);
+                } catch(e) {
+                    savedEnemyCards = [];
+                }
+            } else {
+                savedEnemyCards = [];
+            }
+            renderEnemyCards();
+        }
+
+        function saveCurrentEnemy() {
+            const name = document.getElementById('enemy-name').value.trim();
+            const bday = document.getElementById('enemy-birthday').value;
+
+            if (!name || !bday) {
+                showToast('名前と生年月日を入力してください', true);
+                return;
+            }
+
+            if (savedEnemyCards.length >= 5) {
+                showToast('保存できる天敵は5人までです。', true);
+                return;
+            }
+
+            // Prevent duplicate cards
+            const exists = savedEnemyCards.some(e => e.name === name && e.birthday === bday);
+            if(exists) {
+                showToast('この天敵はすでに登録されています', true);
+                return;
+            }
+
+            savedEnemyCards.push({ name, birthday: bday });
+            localStorage.setItem('tenteki_saved_enemiesList', JSON.stringify(savedEnemyCards));
+            
+            showToast('天敵カードを登録しました🔖');
+            renderEnemyCards();
+        }
+
+        function removeEnemy(index) {
+            savedEnemyCards.splice(index, 1);
+            localStorage.setItem('tenteki_saved_enemiesList', JSON.stringify(savedEnemyCards));
+            renderEnemyCards();
+        }
+
+        function selectEnemy(index) {
+            const enemy = savedEnemyCards[index];
+            if(enemy) {
+                document.getElementById('enemy-name').value = enemy.name;
+                document.getElementById('enemy-birthday').value = enemy.birthday;
+                toggleSaveBtn();
+                
+                // Visual feedback
+                const cards = document.querySelectorAll('.enemy-card-item');
+                cards.forEach(c => c.classList.remove('ring-2', 'ring-amber-500'));
+                cards[index].classList.add('ring-2', 'ring-amber-500');
+            }
+        }
+
+        function renderEnemyCards() {
+            const container = document.getElementById('saved-enemies-container');
+            const wrapper = document.getElementById('cards-wrapper');
+            const count = document.getElementById('saved-count');
+
+            if (savedEnemyCards.length === 0) {
+                container.classList.add('hidden');
+                return;
+            }
+
+            container.classList.remove('hidden');
+            count.innerText = savedEnemyCards.length + '/5';
+
+            let html = '';
+            savedEnemyCards.forEach((enemy, idx) => {
+                // Formatting birthday for display
+                const bDate = new Date(enemy.birthday);
+                const mm = String(bDate.getMonth() + 1).padStart(2, '0');
+                const dd = String(bDate.getDate()).padStart(2, '0');
+                const bStr = mm + '/' + dd;
+
+                html += `
+                <div class="enemy-card-item shrink-0 snap-center w-36 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-3 cursor-pointer transition-all relative group flex flex-col justify-between h-20" onclick="selectEnemy(${idx})">
+                    <button onclick="event.stopPropagation(); removeEnemy(${idx})" class="absolute -top-2 -right-2 bg-zinc-800 text-zinc-400 hover:text-red-400 hover:bg-zinc-700 rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition shadow-lg border border-white/10 z-10">✕</button>
+                    <div class="truncate text-xs font-bold text-zinc-200">${enemy.name}</div>
+                    <div class="text-[10px] text-zinc-500 mt-1 flex justify-between items-center">
+                        <span class="font-mono bg-black/30 px-1.5 py-0.5 rounded">🎂 ${bStr}</span>
+                    </div>
+                </div>`;
+            });
+            wrapper.innerHTML = html;
         }
 
         window.generateFortune = async function() {

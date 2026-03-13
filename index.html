@@ -90,7 +90,7 @@
         <header class="p-6 pb-2 text-center relative z-10 flex justify-between items-center">
             <div class="w-10"></div>
             <div>
-                <h1 class="text-xl font-black tracking-widest bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">TENTEKI<span class="text-xs ml-2 font-medium tracking-normal text-zinc-400">天敵占い</span></h1>
+                <h1 class="text-xl font-black tracking-widest bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-indigo-400">ENEMY FORTUNE<span class="text-xs ml-2 font-medium tracking-normal text-zinc-400">天敵占い</span></h1>
             </div>
             <button onclick="toggleSettings()" class="w-10 h-10 flex items-center justify-center rounded-full glass-panel hover:bg-white/5 transition duration-300 text-zinc-300">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -454,6 +454,7 @@
         };
 
         window.resetApp = function() {
+            document.getElementById('loading-state').classList.add('hidden');
             document.getElementById('result-area').classList.add('hidden');
             const profiling = document.getElementById('profiling-section');
             profiling.classList.remove('hidden');
@@ -582,7 +583,8 @@
 
             } catch (error) {
                 console.error("API Error:", error);
-                if (error.message.includes('Incorrect API key') || error.message.includes('invalid api key')) {
+                const msg = error.message.toLowerCase();
+                if (msg.includes('api key') || msg.includes('unauthorized') || msg.includes('401')) {
                     showToast('Invalid API Key provided.', true);
                     toggleSettings();
                 } else {

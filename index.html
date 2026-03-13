@@ -241,10 +241,25 @@
                 </div>
                 
                 <div class="space-y-5">
-                    <div class="bg-black/30 p-4 rounded-2xl border border-white/5">
-                        <p class="text-xs text-zinc-400 leading-relaxed">
-                            OpenAI APIキーは<span class="text-purple-400 font-semibold">ブラウザ内にのみ保存</span>され、外部サーバーには送信されません。
+                    <div class="bg-black/30 p-4 rounded-2xl border border-white/5 space-y-3">
+                        <p class="text-[11px] text-zinc-300 leading-relaxed font-medium">
+                            天敵占いを利用するには、OpenAIのAPIキー（有料）が必要です。キーは<span class="text-purple-400 font-bold">ブラウザ内にのみ保存</span>されます。
                         </p>
+                        
+                        <div class="text-[10px] text-zinc-400 pt-2 border-t border-white/10 space-y-2">
+                            <p class="font-bold text-zinc-300">取得・設定の手順</p>
+                            <ol class="list-decimal list-inside space-y-1.5 ml-1">
+                                <li>
+                                    <a href="https://platform.openai.com/signup" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:text-indigo-300 underline underline-offset-2 transition-colors">OpenAI Platform</a>でアカウントを作成
+                                </li>
+                                <li>
+                                    <a href="https://platform.openai.com/account/billing/overview" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:text-indigo-300 underline underline-offset-2 transition-colors">Billing設定</a>からクレジットカードを登録し、残高をチャージ（$5〜）
+                                </li>
+                                <li>
+                                    <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:text-indigo-300 underline underline-offset-2 transition-colors">API Keysページ</a>で「Create new secret key」を押し、キーを発行して下の枠に入力する
+                                </li>
+                            </ol>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-zinc-500 mb-2 uppercase tracking-widest">API Key</label>
